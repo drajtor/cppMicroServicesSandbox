@@ -6,6 +6,9 @@
 #include "cppmicroservices/Framework.h"
 #include "cppmicroservices/FrameworkFactory.h"
 #include "cppmicroservices/BundleContext.h"
+#include "cppmicroservices/FrameworkEvent.h"
+
+using namespace cppmicroservices;
 
 //TODO change to app argument?
 const std::string INPUT_FILE_REL_PATH = "../input";
@@ -32,7 +35,7 @@ int main (int argc, char** argv){
 	}
 	inputFile.close();
 
-	cppmicroservices::FrameworkFactory framFact;
+	FrameworkFactory framFact;
 	auto framework = framFact.NewFramework();
 
 	framework.Start();
@@ -48,6 +51,22 @@ int main (int argc, char** argv){
 				std::endl;
 	}
 
+	framework.Stop();
+	switch (auto event = framework.WaitForStop(std::chrono::seconds(2)).GetType(); event){
+		case FrameworkEvent::FRAMEWORK_STOPPED:
+			std::cout << "Framework stopped on demoand" << std::endl;
+			break;
+		case FrameworkEvent::FRAMEWORK_ERROR:
+			std::cout << "Framework stopped because of an ERROR" << std::endl;
+			break;
+		case FrameworkEvent::FRAMEWORK_WAIT_TIMEDOUT:
+			std::cout << "Framework stopped because of timeout" << std::endl;
+			break;
+		default:
+			std::cout << "Framework stopped, not handled" << std::endl;
+			break;
+	}
+	
 
 	return 0;
 }	
