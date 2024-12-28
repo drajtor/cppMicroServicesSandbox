@@ -40,9 +40,21 @@ int main (int argc, char** argv){
 
 	framework.Start();
 
-	for (auto const path : bundleNames){
-		framework.GetBundleContext().InstallBundles(path);	
-	}
+	try {
+		for (auto const path : bundleNames){
+			framework.GetBundleContext().InstallBundles(path);	
+		}
+
+	}catch(const std::runtime_error &e){
+		std::cerr << "Runtime exception: " << e.what() << std::endl;
+		return (-1);
+	}catch (const std::invalid_argument &e){
+		std::cerr << "Invalid argument exception: " << e.what() << std::endl;
+		return (-1);
+	}catch(const std::logic_error &e){
+		std::cerr << "Logic exception: " << e.what() << std::endl;
+		return (-1);
+	}	
 
 	for (auto const bundle : framework.GetBundleContext().GetBundles()){
 		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
