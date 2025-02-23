@@ -7,6 +7,9 @@
 #include "cppmicroservices/FrameworkFactory.h"
 #include "cppmicroservices/BundleContext.h"
 #include "cppmicroservices/FrameworkEvent.h"
+#include "cppmicroservices/ServiceReference.h"
+
+#include "dictionaryService/IDictionaryService.h"
 
 using namespace cppmicroservices;
 
@@ -56,11 +59,28 @@ int main (int argc, char** argv){
 		return (-1);
 	}	
 
+
+	for (auto bundle : framework.GetBundleContext().GetBundles()){
+		if (bundle.GetSymbolicName() == "dictionary_service"){
+			bundle.Start();
+		}
+	}
+	
 	for (auto const bundle : framework.GetBundleContext().GetBundles()){
 		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
 				" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<
 				" --SATATE: " << std::setw(10) << std::right << bundle.GetState() <<
 				std::endl;
+	}
+
+
+	ServiceReference serviceReference = framework.GetBundleContext().GetServiceReference<IDictionaryService>();
+	if (serviceReference){
+		std::shared_ptr<IDictionaryService> dictionaryService = framework.GetBundleContext().GetService(serviceReference);
+		std::string word = "Kaka";
+		std::cout << " word found? " << dictionaryService->checkWord(word) << std::endl;
+	}else{
+		std::cout << "Service reference for dictionary service not found" << std::endl;
 	}
 
 	framework.Stop();

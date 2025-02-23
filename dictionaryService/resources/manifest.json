@@ -1,0 +1,4 @@
+{
+	"bundle.symbolic_name" : "dictionary_service",
+	"bundle.activator" : true
+}
