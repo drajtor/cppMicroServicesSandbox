@@ -16,6 +16,15 @@ using namespace cppmicroservices;
 //TODO change to app argument?
 const std::string INPUT_FILE_REL_PATH = "../input";
 
+void printServicesStatus(Framework& framework){
+	for (auto const bundle : framework.GetBundleContext().GetBundles()){
+		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
+				" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<
+				" --SATATE: " << std::setw(10) << std::right << bundle.GetState() <<
+				std::endl;
+	}
+}
+
 int main (int argc, char** argv){
 
 	std::cout << "Services manager" << std::endl;
@@ -59,21 +68,17 @@ int main (int argc, char** argv){
 		return (-1);
 	}	
 
-
-	for (auto bundle : framework.GetBundleContext().GetBundles()){
+	Bundle* dictionaryBundle;
+	auto bundles = framework.GetBundleContext().GetBundles();
+	for (auto& bundle : bundles){
 		if (bundle.GetSymbolicName() == "dictionary_service"){
-			bundle.Start();
+			dictionaryBundle = &bundle;
 		}
 	}
 	
-	for (auto const bundle : framework.GetBundleContext().GetBundles()){
-		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
-				" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<
-				" --SATATE: " << std::setw(10) << std::right << bundle.GetState() <<
-				std::endl;
-	}
-
-
+	dictionaryBundle->Start();
+	printServicesStatus(framework);
+	
 	ServiceReference serviceReference = framework.GetBundleContext().GetServiceReference<IDictionaryService>();
 	if (serviceReference){
 		std::shared_ptr<IDictionaryService> dictionaryService = framework.GetBundleContext().GetService(serviceReference);
@@ -82,8 +87,12 @@ int main (int argc, char** argv){
 	}else{
 		std::cout << "Service reference for dictionary service not found" << std::endl;
 	}
+	
+	dictionaryBundle->Stop();
+	printServicesStatus(framework);
 
 	framework.Stop();
+	
 	switch (auto event = framework.WaitForStop(std::chrono::seconds(2)).GetType(); event){
 		case FrameworkEvent::FRAMEWORK_STOPPED:
 			std::cout << "Framework stopped on demoand" << std::endl;
@@ -102,3 +111,5 @@ int main (int argc, char** argv){
 
 	return 0;
 }	
+
+
