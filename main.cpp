@@ -1,7 +1,5 @@
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <iomanip>
 
 #include "cppmicroservices/Framework.h"
 #include "cppmicroservices/FrameworkFactory.h"
@@ -9,6 +7,7 @@
 #include "cppmicroservices/FrameworkEvent.h"
 #include "cppmicroservices/ServiceReference.h"
 
+#include "BundleManager.h"
 #include "dictionaryService/IDictionaryService.h"
 
 using namespace cppmicroservices;
@@ -16,84 +15,42 @@ using namespace cppmicroservices;
 //TODO change to app argument?
 const std::string INPUT_FILE_REL_PATH = "../input";
 
-void printServicesStatus(Framework& framework){
-	for (auto const bundle : framework.GetBundleContext().GetBundles()){
-		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
-				" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<
-				" --SATATE: " << std::setw(10) << std::right << bundle.GetState() <<
-				std::endl;
-	}
-}
-
 int main (int argc, char** argv){
-
-	std::cout << "Services manager" << std::endl;
-
-	std::ifstream inputFile (INPUT_FILE_REL_PATH);
-	if (!inputFile.is_open()){
-		std::cerr << "can't open input file" << std::endl;
-		return -1;
-	}
 	
-	std::string line; 
-	std::vector<std::string> bundleNames;
-	while (std::getline(inputFile, line)){
-		bundleNames.push_back(line);
-	}
-
-	if (bundleNames.size() == 0){
-		std::cerr << "no bunle found in input file" << std::endl;
-		return -1;
-	}
-	inputFile.close();
-
 	FrameworkFactory framFact;
-	auto framework = framFact.NewFramework();
+	std::shared_ptr<Framework> framework = std::make_shared<Framework>(framFact.NewFramework());
+	BundleManager bundleManager(framework);	
 
-	framework.Start();
-
-	try {
-		for (auto const path : bundleNames){
-			framework.GetBundleContext().InstallBundles(path);	
-		}
-
-	}catch(const std::runtime_error &e){
-		std::cerr << "Runtime exception: " << e.what() << std::endl;
-		return (-1);
-	}catch (const std::invalid_argument &e){
-		std::cerr << "Invalid argument exception: " << e.what() << std::endl;
-		return (-1);
-	}catch(const std::logic_error &e){
-		std::cerr << "Logic exception: " << e.what() << std::endl;
-		return (-1);
-	}	
-
-	Bundle* dictionaryBundle;
-	auto bundles = framework.GetBundleContext().GetBundles();
-	for (auto& bundle : bundles){
-		if (bundle.GetSymbolicName() == "dictionary_service"){
-			dictionaryBundle = &bundle;
-		}
+	try{
+		bundleManager.readAvailableBundles(INPUT_FILE_REL_PATH);
+	}catch(BundleManagerException e){
+		std::cout << e.what() << std::endl;
 	}
+	framework->Start();
+	try{
+		bundleManager.installAvailableBundles();
+	} catch(BundleManagerException e){
+		std::cout << e.what() << std::endl;
+	}	
 	
-	dictionaryBundle->Start();
-	printServicesStatus(framework);
+	std::vector<std::string> bundles = {"dictionary_service"};
+	bundleManager.startBundles(bundles);
+	bundleManager.printServicesStatus();
 	
-	ServiceReference serviceReference = framework.GetBundleContext().GetServiceReference<IDictionaryService>();
+	ServiceReference serviceReference = framework->GetBundleContext().GetServiceReference<IDictionaryService>();
 	if (serviceReference){
-		std::shared_ptr<IDictionaryService> dictionaryService = framework.GetBundleContext().GetService(serviceReference);
+		std::shared_ptr<IDictionaryService> dictionaryService = framework->GetBundleContext().GetService(serviceReference);
 		std::string word = "Kaka";
 		std::cout << " word found? " << dictionaryService->checkWord(word) << std::endl;
 	}else{
 		std::cout << "Service reference for dictionary service not found" << std::endl;
 	}
-	
-	dictionaryBundle->Stop();
-	printServicesStatus(framework);
 
-	framework.Stop();
+	bundleManager.stopBundles(bundles);
+	bundleManager.printServicesStatus();
+	framework->Stop();
 	
-	switch (auto event = framework.WaitForStop(std::chrono::seconds(2)).GetType(); event){
+	switch (auto event = framework->WaitForStop(std::chrono::seconds(2)).GetType(); event){
 		case FrameworkEvent::FRAMEWORK_STOPPED:
 			std::cout << "Framework stopped on demoand" << std::endl;
 			break;
@@ -107,8 +64,6 @@ int main (int argc, char** argv){
 			std::cout << "Framework stopped, not handled" << std::endl;
 			break;
 	}
-	
-
 	return 0;
 }	
 

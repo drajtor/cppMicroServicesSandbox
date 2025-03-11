@@ -12,6 +12,7 @@ add_subdirectory(dictionaryService)
 
 set (_srcs 
 	main.cpp
+	BundleManager.cpp
 )
 
 add_executable(CMSSandbox ${_srcs})
