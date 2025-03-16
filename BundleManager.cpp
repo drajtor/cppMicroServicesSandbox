@@ -1,16 +1,13 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <functional>
+#include <optional>
 
 #include "BundleManager.h"
 #include "cppmicroservices/BundleContext.h"
 
 using namespace cppmicroservices;
-
-TODO powalczyc z duplikacja kodu (petle przeszukujace bundle)
-TODO dodac wielowatkowasc
-
-
 
 void BundleManager::readAvailableBundles(const std::string& inputFile){
 	std::cout << "Services manager" << std::endl;
@@ -45,43 +42,41 @@ void BundleManager::installAvailableBundles() const{
 	}	
 }
 
-void BundleManager::startBundles() const{
+void BundleManager::forEachBundle (const Bundle::State state, 
+				   const std::function<void(Bundle&)>& action, 
+				   const std::optional<std::vector<std::string>>& bundleNames
+				   ) const{
 	auto bundles = framework->GetBundleContext().GetBundles();
 	for (auto& bundle : bundles){
-		if (bundle.GetState() == Bundle::STATE_INSTALLED){
-			bundle.Start();
+		if (bundle.GetState() == state){
+			if (!bundleNames || std::find(bundleNames->begin(), bundleNames->end(), bundle.GetSymbolicName()) != bundleNames->end()){
+				action(bundle);
+			}
 		}
 	}
+}
+
+void BundleManager::startBundles() const{
+	forEachBundle(Bundle::STATE_INSTALLED, [](Bundle& bundle){
+		bundle.Start();
+		}, std::nullopt);
 }
 
 void BundleManager::startBundles(const std::vector<std::string>& bundlesToStart) const{
-	auto bundles = framework->GetBundleContext().GetBundles();
-	for (auto& bundle : bundles){
-		for (const auto& bundleName : bundlesToStart){
-			if (bundle.GetSymbolicName() == bundleName && bundle.GetState() == Bundle::STATE_INSTALLED){
-				bundle.Start();
-			}
-		}
-	}
+	forEachBundle(Bundle::STATE_INSTALLED, [](Bundle& bundle){
+		bundle.Start();
+		}, bundlesToStart);
 }
 
 void BundleManager::stopBundles() const{
-	auto bundles = framework->GetBundleContext().GetBundles();
-	for (auto& bundle : bundles){
-		if (bundle.GetState() == Bundle::STATE_ACTIVE){
-			bundle.Stop();
-		}
-	}
+	forEachBundle(Bundle::STATE_ACTIVE, [](Bundle& bundle){
+		bundle.Stop();
+		}, std::nullopt);
 }
 void BundleManager::stopBundles(const std::vector<std::string>& bundlesToStop) const{
-	auto bundles = framework->GetBundleContext().GetBundles();
-	for (auto& bundle : bundles){
-		for (const auto& bundleName : bundlesToStop){
-			if (bundle.GetSymbolicName() == bundleName && bundle.GetState() == Bundle::STATE_ACTIVE){
-				bundle.Stop();
-			}
-		}
-	}	
+	forEachBundle(Bundle::STATE_ACTIVE, [](Bundle& bundle){
+		bundle.Stop();
+		}, bundlesToStop);
 }
 void BundleManager::printServicesStatus() const{
 	for (const auto& bundle : framework->GetBundleContext().GetBundles()){

@@ -3,6 +3,7 @@
 #include <string>
 #include <exception>
 #include <vector>
+#include <optional>
 
 #include "cppmicroservices/Framework.h"
 
@@ -30,6 +31,10 @@ public:
 
 	void readAvailableBundles(const std::string& inputFile);
 	void installAvailableBundles() const;
+	void forEachBundle (const cppmicroservices::Bundle::State state, 
+			    const std::function<void(cppmicroservices::Bundle&)>& action, 
+			    const std::optional<std::vector<std::string>>& bundleNames
+			    ) const;
 	void startBundles() const;
 	void startBundles(const std::vector<std::string>& bundlesToStart) const;
 	void stopBundles() const;
