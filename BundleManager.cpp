@@ -10,6 +10,7 @@
 using namespace cppmicroservices;
 
 void BundleManager::readAvailableBundles(const std::string& inputFile){
+ 	std::lock_guard<std::mutex> lock(m_mutex);	
 	std::cout << "Services manager" << std::endl;
 
 	std::ifstream file (inputFile);
@@ -28,6 +29,7 @@ void BundleManager::readAvailableBundles(const std::string& inputFile){
 }
 
 void BundleManager::installAvailableBundles() const{
+	std::lock_guard<std::mutex> lock (m_mutex);
 	try {
 		for (const auto& path : bundlesToLoad){
 			framework->GetBundleContext().InstallBundles(path);	
@@ -46,6 +48,7 @@ void BundleManager::forEachBundle (const Bundle::State state,
 				   const std::function<void(Bundle&)>& action, 
 				   const std::optional<std::vector<std::string>>& bundleNames
 				   ) const{
+	std::lock_guard<std::mutex> lock (m_mutex);
 	auto bundles = framework->GetBundleContext().GetBundles();
 	for (auto& bundle : bundles){
 		if (bundle.GetState() == state){
@@ -79,6 +82,7 @@ void BundleManager::stopBundles(const std::vector<std::string>& bundlesToStop) c
 		}, bundlesToStop);
 }
 void BundleManager::printServicesStatus() const{
+	std::lock_guard<std::mutex> lock (m_mutex);
 	for (const auto& bundle : framework->GetBundleContext().GetBundles()){
 		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
 				" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<

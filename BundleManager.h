@@ -4,6 +4,7 @@
 #include <exception>
 #include <vector>
 #include <optional>
+#include <mutex>
 
 #include "cppmicroservices/Framework.h"
 
@@ -25,6 +26,7 @@ class BundleManager {
 private:
 	std::vector<std::string> bundlesToLoad;
 	std::shared_ptr<cppmicroservices::Framework> framework;
+	mutable std::mutex m_mutex;
 
 public:
 	explicit BundleManager(std::shared_ptr<cppmicroservices::Framework> framework) : framework(framework){}
