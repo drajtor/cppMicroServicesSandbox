@@ -3,6 +3,7 @@
 #include <iostream>
 #include <functional>
 #include <optional>
+#include <sstream>
 
 #include "BundleManager.h"
 #include "cppmicroservices/BundleContext.h"
@@ -11,7 +12,7 @@ using namespace cppmicroservices;
 
 void BundleManager::readAvailableBundles(const std::string& inputFile){
  	std::lock_guard<std::mutex> lock(m_mutex);	
-	std::cout << "Services manager" << std::endl;
+	logger->logInfo("Services manager");
 
 	std::ifstream file (inputFile);
 	if (!file.is_open()){
@@ -84,10 +85,11 @@ void BundleManager::stopBundles(const std::vector<std::string>& bundlesToStop) c
 void BundleManager::printServicesStatus() const{
 	std::lock_guard<std::mutex> lock (m_mutex);
 	for (const auto& bundle : framework->GetBundleContext().GetBundles()){
-		std::cout << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
-				" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<
-				" --SATATE: " << std::setw(10) << std::right << bundle.GetState() <<
-				std::endl;
+		std::ostringstream oss;
+		oss << 	"--ID: " << std::setw(2)  << bundle.GetBundleId() << 
+			" --NAME: " << std::setw(20) << std::left << bundle.GetSymbolicName() <<
+			" --SATATE: " << std::setw(10) << std::right << bundle.GetState();
+		logger->logInfo(oss.str());
 	}
 }
 

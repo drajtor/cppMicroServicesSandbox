@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include "cppmicroservices/Framework.h"
 #include "cppmicroservices/FrameworkFactory.h"
@@ -9,6 +10,7 @@
 
 #include "BundleManager.h"
 #include "dictionaryService/IDictionaryService.h"
+#include "ConsoleLogger.h"
 
 using namespace cppmicroservices;
 
@@ -19,7 +21,8 @@ int main (int argc, char** argv){
 	
 	FrameworkFactory framFact;
 	std::shared_ptr<Framework> framework = std::make_shared<Framework>(framFact.NewFramework());
-	BundleManager bundleManager(framework);	
+	auto logger = std::make_shared<ConsoleLogger>(ConsoleLogger());
+	BundleManager bundleManager(logger,framework);	
 
 	try{
 		bundleManager.readAvailableBundles(INPUT_FILE_REL_PATH);
@@ -52,16 +55,16 @@ int main (int argc, char** argv){
 	
 	switch (auto event = framework->WaitForStop(std::chrono::seconds(2)).GetType(); event){
 		case FrameworkEvent::FRAMEWORK_STOPPED:
-			std::cout << "Framework stopped on demoand" << std::endl;
+			std::cout<<"Framework stopped on demoand" << std::endl;
 			break;
 		case FrameworkEvent::FRAMEWORK_ERROR:
-			std::cout << "Framework stopped because of an ERROR" << std::endl;
+			std::cout<<"Framework stopped because of an ERROR" << std::endl;
 			break;
 		case FrameworkEvent::FRAMEWORK_WAIT_TIMEDOUT:
-			std::cout << "Framework stopped because of timeout" << std::endl;
+			std::cout<<"Framework stopped because of timeout" << std::endl;
 			break;
 		default:
-			std::cout << "Framework stopped, not handled" << std::endl;
+			std::cout<<"Framework stopped, not handled" << std::endl;
 			break;
 	}
 	return 0;

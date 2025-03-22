@@ -7,6 +7,8 @@
 #include <mutex>
 
 #include "cppmicroservices/Framework.h"
+#include "Loggable.h"
+#include "ILogger.h"
 
 class BundleManagerException : public std::exception {
 
@@ -21,7 +23,7 @@ public:
 	}	
 };
 
-class BundleManager {
+class BundleManager : public Loggable{
 
 private:
 	std::vector<std::string> bundlesToLoad;
@@ -29,7 +31,7 @@ private:
 	mutable std::mutex m_mutex;
 
 public:
-	explicit BundleManager(std::shared_ptr<cppmicroservices::Framework> framework) : framework(framework){}
+	explicit BundleManager(std::shared_ptr<ILogger> logger, std::shared_ptr<cppmicroservices::Framework> framework) : Loggable(logger), framework(framework){}
 
 	void readAvailableBundles(const std::string& inputFile);
 	void installAvailableBundles() const;
