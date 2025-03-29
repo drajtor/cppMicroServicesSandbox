@@ -4,6 +4,6 @@
 
 class ConsoleLogger : public ILogger {
 public:
-	void logInfo (const std::string) const override;
+	void logInfo (const std::string&) const override;
 
 };

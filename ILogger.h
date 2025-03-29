@@ -4,6 +4,6 @@
 
 class ILogger {
 public:
-	virtual void logInfo (const std::string) const = 0;
+	virtual void logInfo (const std::string&) const = 0;
 
 };
