@@ -15,6 +15,8 @@ set (_srcs
 	ConsoleLogger.cpp
 )
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 add_library (CMSCore ${_srcs})
 target_link_libraries (CMSCore PUBLIC CppMicroServices dictionary_service)
 
@@ -28,15 +30,5 @@ target_link_libraries (CMSSandbox PRIVATE CMSCore)
 option(BUILD_TESTS "Build tests" ON)
 
 if (BUILD_TESTS)
-	add_subdirectory(googletest)
-	enable_testing()
-
-	set (_test_srcs
-		test_BundleManager.cpp
-	)
-
-	add_executable(runTests ${_test_srcs})
-	target_link_libraries (runTests PRIVATE CMSCore gtest gmock gtest_main)
-	add_test (NAME BundleManagerTest, COMMAND runTests)
-
+	add_subdirectory(test)
 endif()
